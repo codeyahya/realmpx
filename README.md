@@ -15,7 +15,7 @@
 -  Open the selected output folder directly from the app
 -  Live yt-dlp output and download logs
 -  Cancel download
--  Pause/resume suppor
+-  Pause/resume 
 -  Dark and light themes
 -  Checks whether **yt-dlp** and **FFmpeg** are installed
 
