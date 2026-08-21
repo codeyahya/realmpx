@@ -87,8 +87,6 @@ async fn download_media(
             args.push("bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best".into());
             args.push("--merge-output-format".into());
             args.push("mp4".into());
-            // Force a hard failure instead of silently leaving separate
-            // video/audio files behind when ffmpeg can't merge them.
             args.push("--abort-on-error".into());
             args.push("--js-runtimes".into());
             args.push("deno".into());
@@ -214,6 +212,14 @@ async fn resume_download(state: tauri::State<'_, DownloadState>) -> Result<(), S
 }
 
 #[tauri::command]
+fn get_default_path(app: tauri::AppHandle) -> String {
+    if let Ok(download_dir) = app.path().download_dir() {
+        return download_dir.to_string_lossy().into_owned();
+    }
+    String::from("")
+}
+
+#[tauri::command]
 fn open_result_dir(dir: String) {
     let arg = format!("explorer {}", dir);
     let _ = Command::new("pwsh")
@@ -256,7 +262,8 @@ pub fn run() {
             resume_download,
             check_yt_dlp_installed,
             check_ffmpeg_installed,
-            open_result_dir
+            open_result_dir,
+            get_default_path
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

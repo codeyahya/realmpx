@@ -16,6 +16,8 @@
         "title": "RealMpx",
         "width": 1200,
         "height": 600,
+        "minWidth": 600,
+        "minHeight": 400,
         "resizable": true,
         "fullscreen": false
       }

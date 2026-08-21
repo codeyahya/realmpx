@@ -1,8 +1,7 @@
-:root {
-  --text: #6b6375;
+body[data-theme="light"] {
+  --text: black;
   --text-h: #08060d;
   --bg: #fff;
-  --bg-t: rgb(250, 250, 250);
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
   --accent: #aa3bff;
@@ -12,13 +11,41 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --btn: rgb(240, 240, 240);
+  --btn: rgb(235, 235, 235);
+  --btnHover: rgb(230, 230, 230);
+  --bg-t: rgb(245, 245, 245);
+  --logs: rgb(245, 245, 245);
 
-  --sans: Inter, system-ui, "Segoe UI", Roboto, sans-serif;
-  --heading: monospace, Inter, system-ui, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
 
-  color-scheme: light;
+/* @media (prefers-color-scheme: dark) { */
+body[data-theme="dark"] {
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: rgb(15, 15, 15);
+  --border: #2e303a;
+  --code-bg: #1f2028;
+  --accent: #00b569;
+  --accent-bg: rgba(192, 132, 252, 0.15);
+  --accent-border: rgba(192, 132, 252, 0.5);
+  --social-bg: rgba(47, 48, 58, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  --btn: rgb(30, 30, 30);
+  --btnHover: rgb(50, 50, 50);
+  --bg-t: rgb(20, 20, 20);
+  --logs: rgb(20, 20, 20);
+
+  color-scheme: dark;
+  #social .button-icon {
+    filter: invert(1) brightness(2);
+  }
+}
+
+body {
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -27,32 +54,11 @@
   -moz-osx-font-smoothing: grayscale;
   font-family: Inter, sans-serif !important;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #000000;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #00b569;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-    --btn: rgb(30, 30, 30);
-    --btnHover: rgb(50, 50, 50);
-    --bg-t: rgb(20, 20, 20);
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+  --sans: Inter, system-ui, "Segoe UI", Roboto, sans-serif;
+  --heading:
+    JetBrainsMono Nerd Font Mono, monospace, Inter, system-ui, "Segoe UI",
+    Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
 }
 
 #root {
@@ -80,12 +86,9 @@
 }
 
 button {
-  border: none !important;
-  cursor: pointer;
-  background: var(--btn);
-
   &.active {
     background: var(--accent) !important;
+    color: white !important;
   }
 
   &:hover {
@@ -93,9 +96,54 @@ button {
   }
 }
 
+.themeToggle {
+  background: var(--accent);
+  width: 50px;
+  height: 28px;
+  border-radius: 77px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  position: fixed;
+  bottom: 15px;
+  left: 15px;
+  transition: 0.3s;
+
+  .toggle {
+    transition: 0.3s;
+    border-radius: 50%;
+    background: white;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &.light {
+    .toggle {
+      transform: translateX(2px);
+    }
+  }
+
+  &.dark {
+    .toggle {
+      transform: translateX(24px);
+    }
+  }
+}
+
 input,
 button {
   font-family: Inter, sans-serif;
+  border: none !important;
+  cursor: pointer;
+  background: var(--btn);
+  color: var(--text);
+}
+
+input {
+  cursor: text;
 }
 
 body {
