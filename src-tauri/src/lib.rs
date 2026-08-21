@@ -8,6 +8,23 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 use tokio::sync::Mutex as AsyncMutex;
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+/// Builds a tokio Command configured to avoid flashing a console window
+/// on Windows when spawning a child process from a GUI app.
+fn new_command(program: &str) -> Command {
+    let mut cmd = Command::new(program);
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd
+}
+
 #[derive(Debug, Deserialize)]
 pub struct DownloadRequest {
     url: String,
@@ -46,7 +63,7 @@ fn send_signal(pid: u32, sig: nix::sys::signal::Signal) -> Result<(), String> {
 
 #[cfg(windows)]
 async fn kill_windows_process(pid: u32) -> Result<(), String> {
-    Command::new("taskkill")
+    new_command("taskkill")
         .args(["/PID", &pid.to_string(), "/T", "/F"])
         .output()
         .await
@@ -99,7 +116,7 @@ async fn download_media(
     args.push("--newline".into());
     args.push("--no-playlist".into());
 
-    let mut child = Command::new("yt-dlp")
+    let mut child = new_command("yt-dlp")
         .args(&args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -239,17 +256,20 @@ fn get_default_path(app: tauri::AppHandle) -> String {
 
 #[tauri::command]
 fn open_result_dir(dir: String) {
-    let arg = format!("explorer {}", dir);
-    let _ = Command::new("pwsh")
-        .args(["/c"])
-        .arg(arg)
-        .spawn()
-        .map_err(|e| e.to_string());
+    // Launch explorer directly with the path as its own argument rather than
+    // building a shell command string — avoids quoting/injection issues and
+    // the extra pwsh dependency, and doesn't flash a console window.
+    let mut cmd = std::process::Command::new("explorer");
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    let _ = cmd.arg(dir).spawn();
 }
 
 #[tauri::command]
 async fn check_yt_dlp_installed() -> bool {
-    Command::new("yt-dlp")
+    new_command("yt-dlp")
         .arg("--version")
         .output()
         .await
@@ -259,7 +279,7 @@ async fn check_yt_dlp_installed() -> bool {
 
 #[tauri::command]
 async fn check_ffmpeg_installed() -> bool {
-    Command::new("ffmpeg")
+    new_command("ffmpeg")
         .arg("-version")
         .output()
         .await

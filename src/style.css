@@ -1,5 +1,5 @@
 body[data-theme="light"] {
-  --text: black;
+  --text: #08060d;
   --text-h: #08060d;
   --bg: #fff;
   --border: #e5e4e7;
@@ -133,6 +133,7 @@ button {
   }
 }
 
+select,
 input,
 button {
   font-family: Inter, sans-serif;
