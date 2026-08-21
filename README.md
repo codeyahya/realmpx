@@ -1,75 +1,55 @@
-# React + TypeScript + Vite
+# RealMpx 🎬
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![RealMpx Dark Theme](public/screenshots/ss1.png)
+![RealMpx Dark Theme](public/screenshots/ss2.png)
 
-Currently, two official plugins are available:
+**RealMpx** is a lightweight desktop YouTube downloader built with **Tauri, React, TypeScript and Rust**. It uses **yt-dlp** internally to download videos in MP4 or extract audio as MP3.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
 
-## React Compiler
+- 🎥 Download YouTube videos as **MP4**
+- 🎵 Extract YouTube audio as **MP3**
+- 🚀 Automatically selects the highest available MP4 video quality
+- 🎧 MP3 extraction uses yt-dlp's highest audio quality setting
+- 📁 Choose any output folder or use the default Downloads folder
+- 📂 Open the selected output folder directly from the app
+- 📜 Live yt-dlp output and download logs
+- ❌ Cancel an active download
+- ⏸️ Pause/resume support on Unix systems
+- 🌙 Dark and light themes
+- 🔎 Checks whether **yt-dlp** and **FFmpeg** are installed
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+- **React 19 + TypeScript** — user interface
+- **Tailwind CSS 4** — styling
+- **Vite 8** — frontend tooling
+- **Tauri 2** — desktop application framework
+- **Rust + Tokio** — backend and process management
+- **yt-dlp** — media downloading
+- **FFmpeg** — media processing and merging
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Get Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Requirements
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Install **Node.js**, **Rust**, **yt-dlp**, **FFmpeg**, and **Deno**, then make sure they are available in your system `PATH`.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Development
 
+```bash
+git clone https://github.com/codeyahya/realmpx.git
+cd realmpx
+npm install
+npm run tauri dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Build
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run tauri build
 ```
+
+## 📌 Status
+
+RealMpx is an actively developed personal project. The core downloader works, while features such as better error handling, download progress UI, Windows pause/resume and further code organization can be improved over time.
