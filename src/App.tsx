@@ -29,6 +29,7 @@ function App() {
   });
   const [ytDlpReady, setYtDlpReady] = useState<boolean | null>(null);
   const [ffmpegReady, setFfmpegReady] = useState<boolean | null>(null);
+  const [cookiesFromBrowser, setCookiesFromBrowser] = useState<string>("");
 
   const [theme, setTheme] = useState<AppTheme>("dark");
 
@@ -61,7 +62,7 @@ function App() {
 
   async function handleDownload() {
     if (!url.trim()) {
-      setStatus({ type: "error", message: "Paste a YouTube URL first." });
+      setStatus({ type: "error", message: "Paste a URL first." });
       return;
     }
     if (!outputDir) {
@@ -78,7 +79,13 @@ function App() {
       const result = await invoke<{ success: boolean; message: string }>(
         "download_media",
         {
-          request: { url, mode, format, output_dir: outputDir },
+          request: {
+            url,
+            mode,
+            format,
+            output_dir: outputDir,
+            cookies_from_browser: cookiesFromBrowser || null,
+          },
         },
       );
       setStatus({
@@ -122,7 +129,7 @@ function App() {
           className=" font-semibold tracking-tight p-0 m-0 "
           style={{ fontSize: "34px" }}
         >
-          YouTube Downloader
+          RealMpx Video Downloader
         </h1>
         <div className="w-full max-w-xl bg-[var(--bg-t)] rounded-2xl p-8">
           {ytDlpReady === false && (
@@ -143,9 +150,26 @@ function App() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             disabled={isDownloading}
-            placeholder="https://www.youtube.com/watch?v=..."
+            placeholder="Paste a video URL..."
             className="w-full rounded-lg px-3 py-2 mb-4 text-sm outline-none focus:border-neutral-500 transition-colors disabled:opacity-50"
           />
+
+          <select
+            value={cookiesFromBrowser}
+            onChange={(e) => setCookiesFromBrowser(e.target.value)}
+            disabled={isDownloading}
+            className="bg-[var(--bg-t)] w-full rounded-lg px-3 py-2 mb-4 text-sm border-none outline-none transition-colors disabled:opacity-50"
+          >
+            <option value="">No browser cookies</option>
+            <option value="chrome">Cookies from Chrome</option>
+            <option value="firefox">Cookies from Firefox</option>
+            <option value="edge">Cookies from Edge</option>
+            <option value="brave">Cookies from Brave</option>
+            <option value="opera">Cookies from Opera</option>
+            <option value="safari">Cookies from Safari</option>
+            <option value="vivaldi">Cookies from Vivaldi</option>
+            <option value="chromium">Cookies from Chromium</option>
+          </select>
 
           <div className="flex gap-3 mb-4">
             <button

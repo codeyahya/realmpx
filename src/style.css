@@ -23,7 +23,7 @@ body[data-theme="light"] {
 
 /* @media (prefers-color-scheme: dark) { */
 body[data-theme="dark"] {
-  --text: #9ca3af;
+  --text: #dee1e6;
   --text-h: #f3f4f6;
   --bg: rgb(15, 15, 15);
   --border: #2e303a;

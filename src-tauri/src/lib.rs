@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::fmt::format;
 use std::process::Stdio;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri::{Emitter, Manager};
+use tauri_plugin_notification::NotificationExt;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 use tokio::sync::Mutex as AsyncMutex;
@@ -14,6 +14,8 @@ pub struct DownloadRequest {
     mode: String,
     format: String,
     output_dir: String,
+    #[serde(default)]
+    cookies_from_browser: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -33,16 +35,6 @@ pub struct DownloadResult {
 pub struct DownloadState {
     pid: Arc<AsyncMutex<Option<u32>>>,
     cancelled: Arc<AtomicBool>,
-}
-
-fn is_valid_youtube_url(url: &str) -> bool {
-    let url = url.trim();
-    url.starts_with("https://www.youtube.com/watch")
-        || url.starts_with("https://youtube.com/watch")
-        || url.starts_with("https://youtu.be/")
-        || url.starts_with("https://m.youtube.com/watch")
-        || url.starts_with("http://www.youtube.com/watch")
-        || url.starts_with("https://www.youtube.com/shorts/")
 }
 
 #[cfg(unix)]
@@ -68,11 +60,19 @@ async fn download_media(
     state: tauri::State<'_, DownloadState>,
     request: DownloadRequest,
 ) -> Result<DownloadResult, String> {
-    if !is_valid_youtube_url(&request.url) {
-        return Err("That doesn't look like a valid YouTube URL.".into());
+    if request.url.trim().is_empty() {
+        return Err("That doesn't look like a valid URL.".into());
     }
 
     let mut args: Vec<String> = vec![request.url.clone()];
+
+    if let Some(browser) = request.cookies_from_browser.as_deref() {
+        let browser = browser.trim();
+        if !browser.is_empty() {
+            args.push("--cookies-from-browser".into());
+            args.push(browser.into());
+        }
+    }
 
     match (request.mode.as_str(), request.format.as_str()) {
         ("audio", "mp3") => {
@@ -144,16 +144,34 @@ async fn download_media(
     *state.pid.lock().await = None;
 
     if status.success() {
+        let _ = app
+            .notification()
+            .builder()
+            .title("Download complete")
+            .body(format!("Finished downloading: {}", request.url))
+            .show();
         Ok(DownloadResult {
             success: true,
             message: "Download complete.".into(),
         })
     } else if state.cancelled.load(Ordering::SeqCst) {
+        let _ = app
+            .notification()
+            .builder()
+            .title("Download cancelled")
+            .body(format!("Cancelled: {}", request.url))
+            .show();
         Ok(DownloadResult {
             success: false,
             message: "Download cancelled.".into(),
         })
     } else {
+        let _ = app
+            .notification()
+            .builder()
+            .title("Download failed")
+            .body(format!("yt-dlp exited with status: {status}"))
+            .show();
         Err(format!("yt-dlp exited with status: {status}"))
     }
 }
@@ -254,6 +272,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .manage(DownloadState::default())
         .invoke_handler(tauri::generate_handler![
             download_media,
