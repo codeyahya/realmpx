@@ -33,7 +33,16 @@
 
 ### Requirements
 
-Install **Node.js**, **Rust**, **yt-dlp**, **FFmpeg**, and **Deno**, then make sure they are available in your system `PATH`.
+Make sure you have:
+[Node.js](https://nodejs.org/en/download), 
+[yt-dlp](https://github.com/yt-dlp/yt-dlp), 
+[Deno](https://deno.com/), 
+then make sure they are available in your system `PATH`.
+
+Run this command to install FFmpeg:
+`
+winget install --id Gyan.FFmpeg -e
+`
 
 ### Development
 
