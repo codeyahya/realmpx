@@ -40,9 +40,9 @@ Make sure you have:
 then make sure they are available in your system `PATH`.
 
 Run this command to install FFmpeg:
-`
+```
 winget install --id Gyan.FFmpeg -e
-`
+```
 
 ### Development
 
