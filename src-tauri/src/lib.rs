@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use std::env;
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -16,13 +18,61 @@ const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 /// Builds a tokio Command configured to avoid flashing a console window
 /// on Windows when spawning a child process from a GUI app.
-fn new_command(program: &str) -> Command {
-    let mut cmd = Command::new(program);
+fn new_command(program: impl AsRef<Path>) -> Command {
+    let mut cmd = Command::new(program.as_ref());
     #[cfg(windows)]
     {
         cmd.creation_flags(CREATE_NO_WINDOW);
     }
     cmd
+}
+
+fn bundled_tool(app: &tauri::AppHandle, tool: &str) -> Result<(PathBuf, PathBuf), String> {
+    let filename = if cfg!(windows) {
+        format!("{tool}.exe")
+    } else {
+        tool.to_string()
+    };
+    let mut candidates = Vec::new();
+
+    if let Ok(resource_dir) = app.path().resource_dir() {
+        candidates.push(resource_dir.join("bin"));
+        candidates.push(resource_dir);
+    }
+    if let Ok(current_dir) = env::current_dir() {
+        candidates.push(current_dir.join("resources").join("bin"));
+    }
+    candidates.push(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("resources")
+            .join("bin"),
+    );
+
+    for tools_dir in candidates {
+        let path = tools_dir.join(&filename);
+        if path.is_file() {
+            return Ok((path, tools_dir));
+        }
+    }
+
+    Err(format!(
+        "Bundled tool '{filename}' was not found. Reinstall the application."
+    ))
+}
+
+fn bundled_command(app: &tauri::AppHandle, tool: &str) -> Result<Command, String> {
+    let (path, tools_dir) = bundled_tool(app, tool)?;
+    let mut command = new_command(path);
+    let mut paths = vec![tools_dir];
+    if let Some(existing_path) = env::var_os("PATH") {
+        paths.extend(env::split_paths(&existing_path));
+    }
+    let path = env::join_paths(paths).map_err(|error| {
+        format!("Could not configure the bundled tools PATH: {error}")
+    })?;
+    command.env("PATH", path);
+    Ok(command)
 }
 
 #[derive(Debug, Deserialize)]
@@ -84,7 +134,7 @@ async fn download_media(
     request: DownloadRequest,
 ) -> Result<DownloadResult, String> {
     if request.url.trim().is_empty() {
-        return Err("That doesn't look like a valid URL.".into());
+        return Err("URL is not valid.".into());
     }
 
     let mut args: Vec<String> = vec![request.url.clone()];
@@ -123,12 +173,12 @@ async fn download_media(
     args.push("--newline".into());
     args.push("--no-playlist".into());
 
-    let mut child = new_command("yt-dlp")
+    let mut child = bundled_command(&app, "yt-dlp")?
         .args(&args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| format!("Failed to start yt-dlp (is it installed and on PATH?): {e}"))?;
+        .map_err(|e| format!("Failed to start the bundled yt-dlp: {e}"))?;
 
     // Reset control flags for this run and publish the PID so
     // cancel_download/pause_download/resume_download can reach it.
@@ -286,23 +336,35 @@ fn open_result_dir(dir: String) {
 }
 
 #[tauri::command]
-async fn check_yt_dlp_installed() -> bool {
-    new_command("yt-dlp")
-        .arg("--version")
-        .output()
-        .await
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+async fn check_yt_dlp_installed(app: tauri::AppHandle) -> bool {
+    check_bundled_tool(&app, "yt-dlp", "--version").await
 }
 
 #[tauri::command]
-async fn check_ffmpeg_installed() -> bool {
-    new_command("ffmpeg")
-        .arg("-version")
-        .output()
-        .await
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+async fn check_ffmpeg_installed(app: tauri::AppHandle) -> bool {
+    check_bundled_tool(&app, "ffmpeg", "-version").await
+}
+
+#[tauri::command]
+async fn check_ffprobe_installed(app: tauri::AppHandle) -> bool {
+    check_bundled_tool(&app, "ffprobe", "-version").await
+}
+
+#[tauri::command]
+async fn check_deno_installed(app: tauri::AppHandle) -> bool {
+    check_bundled_tool(&app, "deno", "--version").await
+}
+
+async fn check_bundled_tool(app: &tauri::AppHandle, tool: &str, version_arg: &str) -> bool {
+    match bundled_command(app, tool) {
+        Ok(mut command) => command
+            .arg(version_arg)
+            .output()
+            .await
+            .map(|output| output.status.success())
+            .unwrap_or(false),
+        Err(_) => false,
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -319,6 +381,8 @@ pub fn run() {
             resume_download,
             check_yt_dlp_installed,
             check_ffmpeg_installed,
+            check_ffprobe_installed,
+            check_deno_installed,
             open_result_dir,
             get_default_path
         ])

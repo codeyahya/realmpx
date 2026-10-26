@@ -31,6 +31,8 @@ function App() {
   });
   const [ytDlpReady, setYtDlpReady] = useState<boolean | null>(null);
   const [ffmpegReady, setFfmpegReady] = useState<boolean | null>(null);
+  const [ffprobeReady, setFfprobeReady] = useState<boolean | null>(null);
+  const [denoReady, setDenoReady] = useState<boolean | null>(null);
   const [cookiesFromBrowser, setCookiesFromBrowser] = useState<string>("");
 
   const [theme, setTheme] = useState<AppTheme>("dark");
@@ -41,6 +43,8 @@ function App() {
     invoke<string>("get_default_path").then(setOutputDir);
     invoke<boolean>("check_yt_dlp_installed").then(setYtDlpReady);
     invoke<boolean>("check_ffmpeg_installed").then(setFfmpegReady);
+    invoke<boolean>("check_ffprobe_installed").then(setFfprobeReady);
+    invoke<boolean>("check_deno_installed").then(setDenoReady);
     
     document.body.setAttribute("data-theme", theme)
 
@@ -137,14 +141,25 @@ function App() {
         <div className="w-full max-w-xl bg-[var(--bg-t)] rounded-2xl p-8">
           {ytDlpReady === false && (
             <div className="mb-4 text-sm bg-red-950 border border-red-800 text-red-300 rounded-lg px-3 py-2">
-              yt-dlp wasn't found on your PATH. Install it and restart the app.
+              The bundled yt-dlp executable is missing or could not be started.
             </div>
           )}
           {ffmpegReady === false && (
             <div className="mb-4 text-sm bg-red-950 border border-red-800 text-red-300 rounded-lg px-3 py-2">
-              ffmpeg wasn't found on your PATH — video downloads need it to
-              merge audio and video into a single file. Install ffmpeg and
-              restart the app.
+              The bundled ffmpeg executable is missing or could not be started.
+              Video downloads and MP3 extraction need it.
+            </div>
+          )}
+          {ffprobeReady === false && (
+            <div className="mb-4 text-sm bg-red-950 border border-red-800 text-red-300 rounded-lg px-3 py-2">
+              The bundled ffprobe executable is missing or could not be
+              started. Reinstall the app.
+            </div>
+          )}
+          {denoReady === false && (
+            <div className="mb-4 text-sm bg-red-950 border border-red-800 text-red-300 rounded-lg px-3 py-2">
+              The bundled Deno executable is missing or could not be started.
+              Video downloads need it.
             </div>
           )}
 
