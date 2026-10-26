@@ -33,6 +33,12 @@ pub struct DownloadRequest {
     output_dir: String,
     #[serde(default)]
     cookies_from_browser: Option<String>,
+    #[serde(default = "default_quality")]
+    quality: String,
+}
+
+fn default_quality() -> String {
+    "highest".into()
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -101,13 +107,14 @@ async fn download_media(
         }
         ("video", "mp4") => {
             args.push("-f".into());
-            args.push("bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best".into());
+            args.push(video_format(&request.quality)?);
             args.push("--merge-output-format".into());
             args.push("mp4".into());
             args.push("--abort-on-error".into());
             args.push("--js-runtimes".into());
             args.push("deno".into());
         }
+
         _ => return Err("Unsupported mode/format combination.".into()),
     }
 
@@ -190,6 +197,17 @@ async fn download_media(
             .body(format!("yt-dlp exited with status: {status}"))
             .show();
         Err(format!("yt-dlp exited with status: {status}"))
+    }
+}
+
+fn video_format(quality: &str) -> Result<String, String> {
+    match quality {
+        "lowest" => Ok("worstvideo+worstaudio/worst".into()),
+        "highest" => Ok("bestvideo+bestaudio/best".into()),
+        "360" | "480" | "720" | "1080" | "1440" | "2160" => Ok(format!(
+            "bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best"
+        )),
+        _ => Err("Unsupported video quality.".into()),
     }
 }
 

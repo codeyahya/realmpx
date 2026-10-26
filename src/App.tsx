@@ -6,6 +6,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 type Mode = "video" | "audio";
 type Format = "mp4" | "mp3";
 type AppTheme = "light" | "dark";
+type VideoQuality = "lowest" | "360" | "480" | "720" | "1080" | "1440" | "2160" | "highest";
 
 interface DownloadProgress {
   line: string;
@@ -14,6 +15,7 @@ interface DownloadProgress {
 function App() {
   const [url, setUrl] = useState("");
   const [mode, setMode] = useState<Mode>("video");
+  const [videoQuality, setVideoQuality] = useState<VideoQuality>("highest");
   const [outputDir, setOutputDir] = useState<string>(
     "C:\\Users\\HP\\Downloads",
   );
@@ -85,6 +87,7 @@ function App() {
             format,
             output_dir: outputDir,
             cookies_from_browser: cookiesFromBrowser || null,
+            quality: videoQuality,
           },
         },
       );
@@ -169,6 +172,26 @@ function App() {
             <option value="safari">Cookies from Safari</option>
             <option value="vivaldi">Cookies from Vivaldi</option>
             <option value="chromium">Cookies from Chromium</option>
+          </select>
+
+          <label className="block text-xs text-neutral-500 mb-2" htmlFor="video-quality">
+            Video quality
+          </label>
+          <select
+            id="video-quality"
+            value={videoQuality}
+            onChange={(e) => setVideoQuality(e.target.value as VideoQuality)}
+            disabled={isDownloading || mode === "audio"}
+            className="bg-[var(--bg-t)] w-full rounded-lg px-3 py-2 mb-4 text-sm border-none outline-none transition-colors disabled:opacity-50"
+          >
+            <option value="lowest">Lowest available</option>
+            <option value="360">Up to 360p</option>
+            <option value="480">Up to 480p</option>
+            <option value="720">Up to 720p</option>
+            <option value="1080">Up to 1080p</option>
+            <option value="1440">Up to 1440p</option>
+            <option value="2160">Up to 2160p (4K)</option>
+            <option value="highest">Highest available</option>
           </select>
 
           <div className="flex gap-3 mb-4">
